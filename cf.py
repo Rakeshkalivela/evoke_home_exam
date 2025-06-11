@@ -34,3 +34,26 @@ class ItemCF:
             _, idx = self.nn.kneighbors(self._mat[i], n_neighbors=top + 1)
             out[mid] = [self.ridx[j] for j in idx[0][1:]]   # drop itself
         return out
+
+    
+    def print_similar_table(self, movie_id: int, movies_df: pd.DataFrame) -> None:
+        """Print a table of similar movies for the given movie_id"""
+        if movie_id not in self.midx:
+            print(f"Movie ID {movie_id} not found in training data.")
+            return
+
+        i = self.midx[movie_id]
+        _, neighbors = self.nn.kneighbors(self._mat[i], n_neighbors=self.k + 1)
+
+        # Get original movie and neighbor IDs
+        neighbor_ids = [self.ridx[j] for j in neighbors[0][1:]]
+        ref_movie = movies_df[movies_df.movieId == movie_id][['movieId', 'title']]
+
+        # Get titles of neighbors
+        similar_movies = movies_df[movies_df.movieId.isin(neighbor_ids)][['movieId', 'title']]
+        similar_movies = similar_movies.reset_index(drop=True)
+
+        # Display
+        print(f"\nFor movie:\n{ref_movie.iloc[0]['title']} (movieId: {ref_movie.iloc[0]['movieId']})")
+        print("\nTop", self.k, "Similar Movies:\n")
+        print(similar_movies)
